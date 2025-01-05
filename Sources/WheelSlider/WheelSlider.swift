@@ -77,10 +77,7 @@ public struct WheelSlider<Value: BinaryFloatingPoint>: View {
                 }
                 .onAppear {
                     let valueStep = Int((value - range.lowerBound) / step)
-                    
-                    if valueStep < stepCount {
-                        proxy.scrollTo(valueStep, anchor: .center)
-                    }
+                    proxy.scrollTo(valueStep, anchor: .center)
                 }
                 .sensoryFeedback(.selection, trigger: scrollPosition)
             } // ScrollViewReader
