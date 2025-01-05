@@ -52,10 +52,15 @@ public struct WheelSlider<Value: BinaryFloatingPoint>: View {
                                     .fill(.primary.opacity(isFifth ? 1 : 0.75))
                                     .frame(width: 1, height: isFifth ? 16 : 12)
                                     .frame(width: 16)
-                                    .scrollTransition(.animated.threshold(.visible(0.9))) { content, phase in
+                                    .scrollTransition(.animated(.easeOut(duration: 0.25).delay(0.1)).threshold(.visible(0.9))) { content, phase in
                                         content
-                                            .scaleEffect(phase.isIdentity ? 1 : 0.1)
-                                            .offset(x: phase.isIdentity ? 0 : 4, y: phase.isIdentity ? 0 : 14)
+                                            .scaleEffect(phase.isIdentity ? 1 : 0.5)
+                                            .opacity(phase.isIdentity ? 1 : 0.5)
+                                    }
+                                    .scrollTransition(.animated(.easeOut(duration: 0.25)).threshold(.centered)) { content, phase in
+                                        content
+                                            .scaleEffect(x: 1, y: phase.isIdentity ? 2 : 1)
+                                            .offset(y: phase.isIdentity ? -4 : 0)
                                     }
                                     .id(index)
                             } // ForEach
@@ -107,10 +112,15 @@ public struct WheelSlider<Value: BinaryFloatingPoint>: View {
                                     .fill(.primary.opacity(isFifth ? 1 : 0.75))
                                     .frame(width: isFifth ? 16 : 12, height: 1)
                                     .frame(height: 17)
-                                    .scrollTransition(.animated.threshold(.visible(0.9))) { content, phase in
+                                    .scrollTransition(.animated(.easeOut(duration: 0.25).delay(0.1)).threshold(.visible(0.9))) { content, phase in
                                         content
-                                            .scaleEffect(phase.isIdentity ? 1 : 0.1)
-                                            .offset(x: phase.isIdentity ? 0 : 14, y: phase.isIdentity ? 0 : 4)
+                                            .scaleEffect(phase.isIdentity ? 1 : 0.5)
+                                            .opacity(phase.isIdentity ? 1 : 0.5)
+                                    }
+                                    .scrollTransition(.animated(.easeOut(duration: 0.25)).threshold(.centered)) { content, phase in
+                                        content
+                                            .scaleEffect(x: phase.isIdentity ? 2 : 1, y: 1)
+                                            .offset(x: phase.isIdentity ? 4 : 0)
                                     }
                                     .id(index)
                             } // ForEach
