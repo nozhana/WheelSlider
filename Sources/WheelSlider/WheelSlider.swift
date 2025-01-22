@@ -11,7 +11,7 @@ public struct WheelSlider<Value: BinaryFloatingPoint>: View {
     @Binding public var value: Value
     private let range: ClosedRange<Value>
     private let stepCount: Int
-    private let snap: Bool
+    private let curved: Bool
     private let axis: Axis
     
     private var step: Value {
@@ -20,19 +20,19 @@ public struct WheelSlider<Value: BinaryFloatingPoint>: View {
 
     @State private var scrollPosition: Int?
     
-    public init(value: Binding<Value>, in range: ClosedRange<Value>, step: Value, snap: Bool = true, axis: Axis = .horizontal) {
+    public init(value: Binding<Value>, in range: ClosedRange<Value>, step: Value, curved: Bool = true, axis: Axis = .horizontal) {
         self._value = value
         self.range = range
         self.stepCount = Int((range.upperBound - range.lowerBound) / step)
-        self.snap = snap
+        self.curved = curved
         self.axis = axis
     }
     
-    public init(value: Binding<Value>, in range: ClosedRange<Value>, stepCount: Int = 10, snap: Bool = true, axis: Axis = .horizontal) {
+    public init(value: Binding<Value>, in range: ClosedRange<Value>, stepCount: Int = 10, curved: Bool = true, axis: Axis = .horizontal) {
         self._value = value
         self.range = range
         self.stepCount = stepCount
-        self.snap = snap
+        self.curved = curved
         self.axis = axis
     }
     
@@ -43,7 +43,7 @@ public struct WheelSlider<Value: BinaryFloatingPoint>: View {
                     HStack {
                         Rectangle()
                             .fill(.clear)
-                            .frame(width: geometry.size.width / 2 - 16, height: 16)
+                            .frame(width: geometry.size.width * 0.44, height: 16)
                         
                         HStack(spacing: 0) {
                             ForEach(0..<stepCount+1) { index in
@@ -51,16 +51,19 @@ public struct WheelSlider<Value: BinaryFloatingPoint>: View {
                                 Rectangle()
                                     .fill(.primary.opacity(isFifth ? 1 : 0.75))
                                     .frame(width: 1, height: isFifth ? 16 : 12)
-                                    .frame(width: 16)
-                                    .scrollTransition(.animated(.easeOut(duration: 0.25).delay(0.1)).threshold(.visible(0.9))) { content, phase in
-                                        content
-                                            .scaleEffect(phase.isIdentity ? 1 : 0.5)
-                                            .opacity(phase.isIdentity ? 1 : 0.5)
+                                    .frame(width: geometry.size.width / 19)
+                                    .conditional(curved) { body in
+                                        body
+                                            .scaleEffect(y: 1 - (CGFloat(abs(index - (scrollPosition ?? Int((value - range.lowerBound) / step)))) / (geometry.size.width / 24)).clamped(to: 0...1))
+                                            .opacity(1 - (Double(abs(index - (scrollPosition ?? Int((value - range.lowerBound) / step)))) / (geometry.size.width / 23)).clamped(to: 0...1))
                                     }
-                                    .scrollTransition(.animated(.easeOut(duration: 0.25)).threshold(.centered)) { content, phase in
-                                        content
-                                            .scaleEffect(x: 1, y: phase.isIdentity ? 2 : 1)
-                                            .offset(y: phase.isIdentity ? -4 : 0)
+                                    .conditional(!curved) { body in
+                                        body
+                                            .scrollTransition(.animated(.easeOut(duration: 0.25)).threshold(.visible)) { content, phase in
+                                                content
+                                                    .scaleEffect(phase.isIdentity ? 1 : 0.5)
+                                                    .opacity(phase.isIdentity ? 1 : 0.5)
+                                            }
                                     }
                                     .id(index)
                             } // ForEach
@@ -69,11 +72,13 @@ public struct WheelSlider<Value: BinaryFloatingPoint>: View {
                         
                         Rectangle()
                             .fill(.clear)
-                            .frame(width: geometry.size.width / 2 - 16, height: 16)
+                            .frame(width: geometry.size.width * 0.44, height: 16)
                     } // HStack
+                    .padding(.vertical, 4)
+                    .contentShape(.rect)
                 } // ScrollView
                 .scrollIndicators(.never)
-                .scrollTargetBehavior(.viewAligned)
+                .scrollTargetBehavior(.viewAligned(limitBehavior: .always))
                 .scrollPosition(id: $scrollPosition, anchor: .center)
                 .onChange(of: scrollPosition) { _, newPosition in
                     guard let newPosition else { return }
@@ -90,9 +95,8 @@ public struct WheelSlider<Value: BinaryFloatingPoint>: View {
         .overlay(alignment: .top) {
             Rectangle()
                 .fill(.yellow)
-                .frame(width: 2, height: 22)
+                .frame(width: 2.5, height: 22)
         }
-        .contentShape(.rect)
         .frame(height: 34)
     }
     
@@ -103,24 +107,27 @@ public struct WheelSlider<Value: BinaryFloatingPoint>: View {
                     VStack {
                         Rectangle()
                             .fill(.clear)
-                            .frame(width: 16, height: geometry.size.height / 2 - 15)
+                            .frame(width: 16, height: geometry.size.height * 0.45)
                         
                         VStack(spacing: 0) {
                             ForEach(0..<stepCount+1) { index in
                                 let isFifth = index % 5 == 0
                                 Rectangle()
-                                    .fill(.primary.opacity(isFifth ? 1 : 0.75))
+                                    .fill(.primary.opacity(isFifth ? 1 : 0.5))
                                     .frame(width: isFifth ? 16 : 12, height: 1)
-                                    .frame(height: 17)
-                                    .scrollTransition(.animated(.easeOut(duration: 0.25).delay(0.1)).threshold(.visible(0.9))) { content, phase in
-                                        content
-                                            .scaleEffect(phase.isIdentity ? 1 : 0.5)
-                                            .opacity(phase.isIdentity ? 1 : 0.5)
+                                    .frame(height: geometry.size.height / 18.66)
+                                    .conditional(curved) { body in
+                                        body
+                                            .scaleEffect(x: 1 - (CGFloat(abs(index - (scrollPosition ?? Int((value - range.lowerBound) / step)))) / (geometry.size.height / 24)).clamped(to: 0...1))
+                                            .opacity(1 - (Double(abs(index - (scrollPosition ?? Int((value - range.lowerBound) / step)))) / (geometry.size.height / 23)).clamped(to: 0...1))
                                     }
-                                    .scrollTransition(.animated(.easeOut(duration: 0.25)).threshold(.centered)) { content, phase in
-                                        content
-                                            .scaleEffect(x: phase.isIdentity ? 2 : 1, y: 1)
-                                            .offset(x: phase.isIdentity ? 4 : 0)
+                                    .conditional(!curved) { body in
+                                        body
+                                            .scrollTransition(.animated(.easeOut(duration: 0.25)).threshold(.visible)) { content, phase in
+                                                content
+                                                    .scaleEffect(phase.isIdentity ? 1 : 0.5)
+                                                    .opacity(phase.isIdentity ? 1 : 0.5)
+                                            }
                                     }
                                     .id(index)
                             } // ForEach
@@ -129,8 +136,10 @@ public struct WheelSlider<Value: BinaryFloatingPoint>: View {
                         
                         Rectangle()
                             .fill(.clear)
-                            .frame(width: 16, height: geometry.size.height / 2 - 15)
+                            .frame(width: 16, height: geometry.size.height * 0.44)
                     } // VStack
+                    .padding(.horizontal, 4)
+                    .contentShape(.rect)
                 } // ScrollView
                 .scrollIndicators(.never)
                 .scrollTargetBehavior(.viewAligned)
@@ -142,10 +151,7 @@ public struct WheelSlider<Value: BinaryFloatingPoint>: View {
                 }
                 .onAppear {
                     let valueStep = Int((value - range.lowerBound) / step)
-                    
-                    if valueStep < stepCount {
-                        proxy.scrollTo(valueStep, anchor: .center)
-                    }
+                    proxy.scrollTo(valueStep, anchor: .center)
                 }
                 .sensoryFeedback(.selection, trigger: scrollPosition)
             } // ScrollViewReader
@@ -153,10 +159,9 @@ public struct WheelSlider<Value: BinaryFloatingPoint>: View {
         .overlay(alignment: .leading) {
             Rectangle()
                 .fill(.yellow)
-                .frame(width: 22, height: 2)
+                .frame(width: 22, height: 2.5)
                 .offset(y: 2)
         }
-        .contentShape(.rect)
         .frame(width: 26)
     }
     
